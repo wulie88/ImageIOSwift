@@ -92,13 +92,13 @@ public struct ImageProperties {
 
 extension ImageSource {
 	public var totalDuration: Double {
-		return (0..<count).reduce(0) { $0 + (self.properties(at: $1).delayTime ?? 0) }
+		return (0..<count).reduce(0) { $0 + (self.cachedProperties(at: $1).delayTime ?? 0) }
 	}
 	
 	public func timestamp(atFrame frame: Int) -> TimeInterval {
 		guard frame < count else { return 0 }
 		
-		return (0..<frame).reduce(0) { $0 + (self.properties(at: $1).delayTime ?? 0) }
+		return (0..<frame).reduce(0) { $0 + (self.cachedProperties(at: $1).delayTime ?? 0) }
 	}
 	
 	public func progress(atFrame frame: Int) -> TimeInterval {
@@ -111,14 +111,14 @@ extension ImageSource {
 	}
 	
 	public var preferredFramesPerSecond: Int {
-		guard let shortestDelayTime = (0..<count).map({ (self.properties(at: $0).delayTime ?? 0) }).min() else { return 1 }
+		guard let shortestDelayTime = (0..<count).map({ (self.cachedProperties(at: $0).delayTime ?? 0) }).min() else { return 1 }
 		return Int(ceil(1 / shortestDelayTime))
 	}
 	
 	public func animationFrame(at timestamp: TimeInterval) -> Int {
 		guard self.count > 1, !self.totalDuration.isZero else { return 0 }
 		
-		let loopCount = self.properties().loopCount
+		let loopCount = self.cachedProperties().loopCount
 		let previousLoops = floor(timestamp / self.totalDuration)
 		if loopCount != 0, Int(previousLoops) >= loopCount {
 			return self.count - 1
@@ -129,7 +129,7 @@ extension ImageSource {
 		var offset: TimeInterval = 0
 		var frame: Int = 0
 		while frame < count {
-			let delay = self.properties(at: frame).delayTime ?? 0
+			let delay = self.cachedProperties(at: frame).delayTime ?? 0
 			if offset + delay >= normalizedTimestamp {
 				return frame
 			}

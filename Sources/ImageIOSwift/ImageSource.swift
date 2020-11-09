@@ -281,12 +281,30 @@ public class ImageSource {
 		return CGImageSourceGetType(self.cgImageSource) as String?
 	}
 	
-	public func properties(options: ImageOptions? = nil) -> ImageProperties {
+    private var propertiesCache = [Int: ImageProperties]()
+    
+    public func cachedProperties(at index: Int) -> ImageProperties {
+        if let value = propertiesCache[index] {
+            return value
+        } else {
+            let properties = self.properties(at: index)
+            propertiesCache[index] = properties
+            return properties
+        }
+    }
+    
+    lazy private var defaultProperties = properties()
+    
+    public func cachedProperties() -> ImageProperties {
+        return defaultProperties
+    }
+    
+	private func properties(options: ImageOptions? = nil) -> ImageProperties {
 		let rawValue = CGImageSourceCopyProperties(cgImageSource, options?.rawValue) as? [CFString: Any] ?? [:]
 		return ImageProperties(rawValue: rawValue)
 	}
 	
-	public func properties(at index: Int, options: ImageOptions? = nil) -> ImageProperties {
+    private func properties(at index: Int, options: ImageOptions? = nil) -> ImageProperties {
 		let rawValue = CGImageSourceCopyPropertiesAtIndex(cgImageSource, index, options?.rawValue) as? [CFString: Any] ?? [:]
 		return ImageProperties(rawValue: rawValue)
 	}
